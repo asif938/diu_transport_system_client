@@ -1,5 +1,8 @@
 import React from 'react';
 
+import { Link } from 'react-router';
+
+
 const routes = [
     { name: "Route A", start: "Uttara", end: "DIU", first: "7:00 AM", last: "6:00 PM" },
     { name: "Route B", start: "Mirpur", end: "DIU", first: "7:15 AM", last: "6:30 PM" },
@@ -34,9 +37,13 @@ const BusSnapshot = () => {
 
                 {/* View All Button */}
                 <div className="text-center mt-10">
-                    <button className="bg-green-600 text-white px-6 py-2 rounded-full hover:bg-green-700 transition">
+
+                    <Link to='/transportSchedule'>
+                        <button className="bg-green-600 text-white px-6 py-2 rounded-full hover:bg-green-700 transition">
                         View All Routes
-                    </button>
+                        </button>
+                    </Link>
+
                 </div>
             </div>
         </section>

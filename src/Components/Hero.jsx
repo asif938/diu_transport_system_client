@@ -1,5 +1,7 @@
 import React from 'react';
 import heroimg from '../assets/3.jpg';
+import { Link } from 'react-router';
+
 
 
 const Hero = () => {
@@ -11,7 +13,9 @@ const Hero = () => {
                     Find your route and departure times easily
                 </h1>
                 <p className='text-white text-center px-4 w-[1100px]'>DIU Smart Transport System makes your daily commute easier and more efficient. Instantly access real-time bus schedules, track routes, and book passes online. Stay informed about delays or changes and experience a smooth, reliable, and hassle-free transportation service designed exclusively for DIU students and faculty</p>
-                <button className='bg-[#5F2DED] text-white font-semibold text-lg px-8 py-3 rounded-full border-2 border-[#5F2DED] hover:bg-white hover:text-black pointer'>Track Bus</button>
+
+                <Link to='/transportLocation'><button className='bg-[#5F2DED] text-white font-semibold text-lg px-8 py-3 rounded-full border-2 border-[#5F2DED] hover:bg-white hover:text-black cursor-pointer'>Track Bus</button></Link>
+
             </div>
 
         </div>
