@@ -18,15 +18,28 @@ import {
 } from 'react-icons/fa';
 import logo from '../assets/logo.png';
 import Logo from '../shared/Logo/Logo';
+import useAuth from '../hooks/useAuth';
+import useAdmin from '../hooks/useAdmin';
 
 const Dashboard = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const location = useLocation();
+    const { user } = useAuth();
 
-    // for testing admin panel or user panel. running isadmin = true we will make our first admin.
-    const isAdmin = true;
-    // const isAdmin = false;
-
+    // Get admin status
+    const [isAdmin, adminLoading] = useAdmin();
+    
+    // Show loading state while checking admin status
+    if (adminLoading) {
+        return (
+            <div className="flex items-center justify-center h-screen bg-gray-100">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading dashboard...</p>
+                </div>
+            </div>
+        );
+    }
 
     // Dashboard navigation items
 
@@ -41,6 +54,12 @@ const Dashboard = () => {
             name: 'Bus Management',
             icon: <FaBus />,
             path: '/dashboard/busmanagement',
+            badge: null
+        },
+        {
+            name: 'Manage Routes',
+            icon: <FaRoute />,
+            path: '/dashboard/manageroutes',
             badge: null
         },
         {
@@ -68,9 +87,9 @@ const Dashboard = () => {
             badge: '3'
         },
         {
-            name: 'Analytics',
-            icon: <FaChartBar />,
-            path: '/dashboard/analytics',
+            name: 'Add Notice',
+            icon: <FaBell />,
+            path: '/dashboard/addnotice',
             badge: null
         },
         {
@@ -115,8 +134,10 @@ const Dashboard = () => {
         },
     ];
 
-    const navItems = isAdmin ? adminNavItems : userNavItems;
- 
+    // Ensure isAdmin is a boolean (default to false if undefined)
+    const adminStatus = isAdmin === true;
+    const navItems = adminStatus ? adminNavItems : userNavItems;
+
 
     // Quick stats data
     const quickStats = [
@@ -154,6 +175,10 @@ const Dashboard = () => {
         setSidebarOpen(!sidebarOpen);
     };
 
+    // if (adminLoading) {
+    //     return <div className="p-6 text-lg font-medium">Loading...</div>;
+    // }
+
     return (
         <div className="flex h-screen bg-gray-100">
             {/* Sidebar */}
@@ -190,10 +215,10 @@ const Dashboard = () => {
                                 <span className="flex-1">{item.name}</span>
                                 {item.badge && (
                                     <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${item.badge === 'Live'
-                                            ? 'bg-green-100 text-green-800'
-                                            : item.badge === '3' || item.badge === '5'
-                                                ? 'bg-red-100 text-red-800'
-                                                : 'bg-gray-100 text-gray-800'
+                                        ? 'bg-green-100 text-green-800'
+                                        : item.badge === '3' || item.badge === '5'
+                                            ? 'bg-red-100 text-red-800'
+                                            : 'bg-gray-100 text-gray-800'
                                         }`}>
                                         {item.badge}
                                     </span>
@@ -249,17 +274,20 @@ const Dashboard = () => {
                         {/* Page Title */}
                         <div className="flex-1 lg:flex-none">
                             <h1 className="text-xl font-semibold text-gray-800">
-                                {/* {isAdmin ? 'Admin Dashboard' : 'User Dashboard'} */}
-                                {location.pathname === '/dashboard/adminhome' ? 'Admin Dashboard' :
-                                  location.pathname === '/dashboard/userhome' ? 'User Dashboard':
-                                    location.pathname.includes('schedule') ? 'Transport Schedule' :
-                                        location.pathname.includes('tracking') ? 'Live Tracking' :
-                                            location.pathname.includes('routes') ? 'Bus Routes' :
-                                                location.pathname.includes('applications') ? 'Bus Applications' :
-                                                    location.pathname.includes('users') ? 'Users' :
-                                                        location.pathname.includes('analytics') ? 'Analytics' :
-                                                            location.pathname.includes('notices') ? 'Notices' :
-                                                                'Dashboard'}
+                                {(() => {
+                                    if (location.pathname === '/dashboard/adminhome') return 'Admin Dashboard - Home';
+                                    if (location.pathname === '/dashboard/userhome') return 'User Dashboard - Home';
+                                    if (location.pathname.includes('schedule')) return (adminStatus ? 'Admin' : 'User') + ' Dashboard - Transport Schedule';
+                                    if (location.pathname.includes('management')) return 'Admin Dashboard - Bus Management';
+                                    if (location.pathname.includes('transportLocation')) return (adminStatus ? 'Admin' : 'User') + ' Dashboard - Live Tracking';
+                                    if (location.pathname.includes('routes')) return (adminStatus ? 'Admin Dashboard - Manage Routes' : 'User Dashboard - Bus Routes');
+                                    if (location.pathname.includes('applications')) return 'Admin Dashboard - Bus Applications';
+                                    if (location.pathname.includes('users')) return 'Admin Dashboard - Users';
+                                    if (location.pathname.includes('analytics')) return 'Admin Dashboard - Analytics';
+                                    if (location.pathname.includes('notices') || location.pathname.includes('addnotice')) return (adminStatus ? 'Admin Dashboard - Notices' : 'User Dashboard - Notices');
+                                    if (location.pathname.includes('applybus')) return 'User Dashboard - Apply For Bus';
+                                    return (adminStatus ? 'Admin' : 'User') + ' Dashboard';
+                                })()}
                             </h1>
                         </div>
 
@@ -273,12 +301,10 @@ const Dashboard = () => {
 
                             {/* User Menu */}
                             <div className="flex items-center space-x-3">
-                                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                                    <FaUser className="h-4 w-4 text-white" />
-                                </div>
+                                <img className='w-8 h-8 rounded-full' src={user?.photoURL} alt="" />
                                 <div className="hidden md:block">
-                                    <p className="text-sm font-medium text-gray-700">Admin User</p>
-                                    <p className="text-xs text-gray-500">admin@diu.edu.bd</p>
+                                    <p className="text-sm font-medium text-gray-700">{user?.displayName}</p>
+                                    <p className="text-xs text-gray-500">{user?.email}</p>
                                 </div>
                             </div>
                         </div>
@@ -287,8 +313,8 @@ const Dashboard = () => {
 
                 {/* Main Content Area */}
                 <main className="flex-1 overflow-y-auto">
-                    {/* Quick Stats - Only show on dashboard overview */}
-                    {location.pathname === '/dashboard/adminhome' && (
+                    {/* Quick Stats - Only show on admin dashboard overview */}
+                    {adminStatus && location.pathname === '/dashboard/adminhome' && (
                         <div className="p-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                                 {quickStats.map((stat, index) => (

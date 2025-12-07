@@ -4,6 +4,8 @@ import { MdDirectionsBus, MdSchedule } from "react-icons/md";
 import { MapContainer, TileLayer, Polyline, Popup, Marker } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { useQuery } from "@tanstack/react-query";
+import useAxios from "../../hooks/useAxios";
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -13,6 +15,14 @@ L.Icon.Default.mergeOptions({
 });
 
 const RouteMap = ({ routeCoordinates }) => {
+  if (!routeCoordinates || routeCoordinates.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+        No map data
+      </div>
+    );
+  }
+
   const centerPosition = routeCoordinates[0];
   
   return (
@@ -42,77 +52,20 @@ const RouteMap = ({ routeCoordinates }) => {
   );
 };
 
-const routesData = [
-  {
-    routeNo: "Route 1",
-    routeName: "Dhanmondi <> DSC",
-    startTime: ["08:00 AM", "09:00 AM"],
-    departureTime: ["06:00 PM", "07:00 PM"],
-    details: "Dhanmondi - Sobhanbag <> Shyamoli Square <> Technical Mor <> Majar Road Gabtoli <> Konabari Bus Stop <> Eastern Housing<> Rupnagar <> Birulia Bus Stand <> Daffodil Smart City",
-    coordinates: [
-      [23.746, 90.376], // DSC
-      [23.750, 90.375],
-      [23.770, 90.370],
-      [23.790, 90.370],
-      [23.810, 90.370],
-      [23.830, 90.375],
-      [23.850, 90.380],
-      [23.870, 90.385],
-      [23.890, 90.370],
-      [23.880, 90.350],
-      [23.874, 90.320], // Dhanmondi
-    ],
-  },
-  {
-    routeNo: "Route 2",
-    routeName: "Tongi College Gate <> DSC",
-    startTime: ["07:00 AM", "10:00 AM", "02:15 PM"],
-    departureTime: ["01:30 PM", "04:20 PM", "06:10 PM"],
-    details: "Tongi College Gate Bus Stand <> Kamar Para <> Dhour <> Birulia <> Daffodil Smart City",
-    coordinates: [
-      [23.9115, 90.3210], // DSC
-      [23.8405, 90.3350],
-      [23.9200, 90.3700],
-      [23.9105, 90.3900],
-      [23.9013, 90.4044], // Tongi College Gate
-    ],
-  },
-
-  {
-    routeNo: "Route 3",
-    routeName: "Uttara - Rajlokkhi <> DSC",
-    startTime: ["08:00 AM", "09:00 AM"],
-    departureTime: ["06:00 PM", "07:00 PM"],
-    details: "Uttara - Rajlokkhi <> House building <> Grand Zamzam Tower <> Uttara Metro rail Center<>Diyabari Bridge <> Beribadh <> Birulia <> Khagan <> Daffodil Smart City",
-    coordinates: [
-      [23.874, 90.320], //DSC
-      [23.880, 90.350],
-      [23.890, 90.370], //Uttara - Rajlokkhi 
-    ],
-  },
-{
-        routeNo: "Route 04",
-        routeName: "Mirpur-1, Sony Cinema Hall <> DSC",
-        startTime: ["07:00 AM", "08:30 AM", "10:00 AM", "12:00 PM"],
-        departureTime: ["11:15 AM (will go upto Mirpur-1 only)", "04:20 PM (will go upto Mirpur-10 only)"],
-        details: "Sony Cinema Hall <> Gudaraghat <> Beribadh <> Estern Housing <> Birulia <> Akran <> Daffodil Smart City",
-        coordinates: [
-            [23.8103, 90.3667],
-            [23.8223, 90.3555],
-            [23.8285, 90.3501],
-            [23.8355, 90.3450],
-            [23.8405, 90.3350],
-            [23.8500, 90.3300],
-            [23.9115, 90.3210],
-        ],
-    },
-
-];
-
-
 const TransportSchedule = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRoute, setFilterRoute] = useState("");
+  const axios = useAxios();
+
+  const { data: schedulesRes, isLoading } = useQuery({
+    queryKey: ["schedules"],
+    queryFn: async () => {
+      const res = await axios.get("/api/schedules");
+      return res.data?.data || [];
+    },
+  });
+
+  const routesData = schedulesRes || [];
 
   const routeNumbers = [...new Set(routesData.map(route => route.routeNo))];
 

@@ -1,14 +1,16 @@
 import { useContext } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { AuthContext } from "../../Context/AuthContext";
-
+import useAxios from "../../hooks/useAxios";
+import useAuth from "../../hooks/useAuth";
 
 
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { logInUser, googleSignIn } = useContext(AuthContext);
+  const { logInUser, googleSignIn } = useAuth();
+  const axiosInstance = useAxios();
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -17,9 +19,21 @@ const Login = () => {
     const password = form.password.value;
 
     logInUser(email, password)
-      .then(result => {
+      .then(async (result) => {
         const user = result.user;
         console.log(user);
+
+        // update userinfo in the database
+        const userInfo = {
+          email: user.email,
+          role: 'user', // default role
+          created_at: new Date().toISOString(),
+          last_log_in: new Date().toISOString()
+        }
+
+        const res = await axiosInstance.post('/users', userInfo);
+        console.log('user update info', res.data)
+
 
         form.reset();
         navigate(location?.state || '/');
@@ -33,9 +47,20 @@ const Login = () => {
 
   const handleLoginkWithGoogle = () => {
     googleSignIn()
-      .then(result => {
+      .then(async (result) => {
         const user = result.user;
         console.log(user);
+        // update userinfo in the database
+        const userInfo = {
+          email: user.email,
+          role: 'user', // default role
+          created_at: new Date().toISOString(),
+          last_log_in: new Date().toISOString()
+        }
+
+        const res = await axiosInstance.post('/users', userInfo);
+        console.log('user update info', res.data)
+
         navigate(location?.state || '/');
       })
       .catch(error => {

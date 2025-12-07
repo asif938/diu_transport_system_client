@@ -21,7 +21,7 @@ const Navbar = () => {
             <li><NavLink to="/notice">Notice</NavLink></li>
             {user && (
                 <li>
-                    <NavLink to={role === 'admin' ? '/adminDashboard' : '/dashboard'}>
+                    <NavLink to={role === 'admin' ? '/dashboard/adminhome' : '/dashboard/userhome'}>
                         Dashboard
                     </NavLink>
                 </li>

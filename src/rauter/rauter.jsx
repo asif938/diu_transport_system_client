@@ -12,6 +12,12 @@ import AdminHome from "../Pages/Dashboard/AdminHome/AdminHome";
 import Schedules from "../Pages/Dashboard/Schedules/Schedules";
 import BusApplications from "../Pages/Dashboard/BusApplications/BusApplications";
 import Users from "../Pages/Dashboard/Users/Users";
+import BusManagement from "../Pages/Dashboard/BusManagement/BusManagement";
+import ManageRoutes from "../Pages/Dashboard/ManageRoutes/ManageRoutes";
+import AddNotice from "../Pages/Dashboard/AddNotice";
+import AdminAddSchedule from "../Pages/Dashboard/AdminAddSchedule";
+import LiveSchedule from "../Pages/LiveSchedule";
+import PrivateRoute from "../routes/PrivateRoute";
 
 
 const router = createBrowserRouter([
@@ -46,12 +52,16 @@ const router = createBrowserRouter([
             {
                 path: "/notice",
                 Component: Notice
+            },
+            {
+                path: "/liveSchedule",
+                Component: LiveSchedule
             }
         ]
     },
     {
         path: "/dashboard",
-        Component: Dashboard,
+        element: <Dashboard></Dashboard>,
         children: [
             //normal user routes
             {
@@ -85,11 +95,15 @@ const router = createBrowserRouter([
             },
             {
                 path: "busmanagement",
-                element: <h1>Bus Management</h1>
+                element: <BusManagement></BusManagement>
+            },
+            {
+                path: "manageroutes",
+                element: <ManageRoutes></ManageRoutes>
             },
             {
                 path: "schedule",
-                Component: Schedules
+                element: <LiveSchedule></LiveSchedule>
             },         
             {
                 path: "applications",
@@ -100,12 +114,12 @@ const router = createBrowserRouter([
                 Component: Users
             },
             {
-                path: "analytics",
-                element: <h2 className="text-2xl font-bold">Analytics Dashboard</h2>
+                path: "adminaddschedule",
+                element: <AdminAddSchedule></AdminAddSchedule>
             },
             {
-                path: "notices",
-                element: <h2 className="text-2xl font-bold">Notice Management</h2>
+                path: "addnotice",
+                element: <AddNotice></AddNotice>
             },
 
             // shared routes(this will be shown in any users dashboard)

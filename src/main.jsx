@@ -9,17 +9,20 @@ import router from './rauter/rauter.jsx';
 import { APIProvider } from '@vis.gl/react-google-maps';
 import { googleMapAPIKey } from './map-api-key.js';
 import FirebaseAutheContext from './Context/FirebaseAutheContext.jsx';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 
-
+const queryClient = new QueryClient();
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <FirebaseAutheContext>
-      <APIProvider apiKey={googleMapAPIKey}>
+    <QueryClientProvider client={queryClient}>
+      <FirebaseAutheContext>
+        <APIProvider apiKey={googleMapAPIKey}>
 
-        <RouterProvider router={router} />
+          <RouterProvider router={router} />
 
-      </APIProvider>
-    </FirebaseAutheContext>
+        </APIProvider>
+      </FirebaseAutheContext>
+    </QueryClientProvider>
   </StrictMode>,
 )

@@ -1,72 +1,156 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
 import { renderToStaticMarkup } from "react-dom/server";
 import { FaBus } from "react-icons/fa";
 import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 import MapUpdater from "./MapUpdater";
 
-const LeafletMap = ({ selectedRoute, searchQuery }) => {
-const buses = [
-  { id: 1, route: "DSC - Dhanmondi", busName: "Surjomukhi", busNumber: "12", position: [23.780399, 90.354244], status: "On Time" },
-  { id: 2, route: "DSC - Dhanmondi", busName: "Surjomukhi", busNumber: "19", position: [23.774667, 90.365644], status: "On Time" },
-  { id: 3, route: "DSC - Uttora", busName: "D Link", busNumber: "10", position: [23.874189, 90.385496], status: "5 min late" },
-  { id: 4, route: "DSC - Mirpur", busName: "Rojonigondha", busNumber: "6", position: [23.796957, 90.350486], status: "Delayed" },
+const BACKEND = "https://diu-transport-system-server.vercel.app";
 
-];
+// 🔥 FETCH BUSES FROM /api/admin/buses
+const fetchBuses = async () => {
+  const res = await axios.get(`${BACKEND}/api/admin/buses`);
+  return res.data.data; // Extract array from { success, data }
+};
 
+export default function LeafletMap({
+  selectedRoute,
+  searchQuery,
+  shouldCenter,
+  setShouldCenter,
+  defaultCenter = [23.8768956, 90.3125243],
+}) {
+  // Fetch buses every 3 sec
+  const { data = [], isLoading, error } = useQuery({
+    queryKey: ["admin-buses"],
+    queryFn: fetchBuses,
+    refetchInterval: 3000,
+    staleTime: 2000,
+  });
 
-  // Filter by route + search
-  const filteredBuses = useMemo(() => {
-    let result = selectedRoute === "All" ? buses : buses.filter(b => b.route === selectedRoute);
+  // Filter only ACTIVE buses + valid lat/lng
+  let buses = data
+    .filter((b) => b.status === "active")
+    .filter((b) => b.lat !== null && b.lng !== null)
+    .map((b) => ({
+      busId: b.busId,
+      busName: b.busName,
+      busNumber: b.busNumber,
+      route: b.route,
+      routeId: b.routeId,
+      lat: b.lat,
+      lng: b.lng,
+      status: b.status,
+      updatedAt: b.updatedAt,
+    }));
 
-    if (searchQuery.trim()) {
-      const parts = searchQuery.trim().split(" ");
-      const namePart = parts[0];
-      const numberPart = parts[1];
+  // Filter by route
+  if (selectedRoute !== "All") {
+    buses = buses.filter((b) => b.route === selectedRoute);
+  }
 
-      if (numberPart) {
-        // Exact busName + busNumber
-        result = result.filter(
-          b =>
-            b.busName.toLowerCase() === namePart.toLowerCase() &&
-            b.busNumber === numberPart
-        );
-      } else {
-        // Only by name
-        result = result.filter(b =>
-          b.busName.toLowerCase().includes(namePart.toLowerCase())
-        );
-      }
+  // Search
+  let searchedBus = null;
+  if (searchQuery.trim()) {
+    const q = searchQuery.toLowerCase();
+    buses = buses.filter(
+      (b) =>
+        b.busName.toLowerCase().includes(q) ||
+        b.busNumber.toString().toLowerCase().includes(q) ||
+        b.busId.toLowerCase().includes(q)
+    );
+
+    searchedBus = buses[0] || null;
+  }
+
+  // Final map center
+  const finalCenter =
+    shouldCenter && searchedBus
+      ? [searchedBus.lat, searchedBus.lng]
+      : defaultCenter;
+
+  // Turn off auto-center after centering once
+  useEffect(() => {
+    if (shouldCenter && searchedBus) {
+      setShouldCenter(false);
     }
-    return result;
-  }, [selectedRoute, searchQuery]);
+  }, [shouldCenter, searchedBus]);
 
-
-  // center map to first bus
-  const mapCenter = filteredBuses.length > 0 ? filteredBuses[0].position : [23.780399, 90.354244];
-
-  const iconMarkup = renderToStaticMarkup(<FaBus size={28} color="#16a34a" />);
-  const busIcon = L.divIcon({ html: iconMarkup, className: "", iconSize: [28, 28], iconAnchor: [14, 14] });
+  // Bus icon
+  const busIcon = useMemo(() => {
+    const iconMarkup = renderToStaticMarkup(
+      <FaBus size={24} color="#16a34a" />
+    );
+    return L.divIcon({
+      html: iconMarkup,
+      className: "",
+      iconSize: [24, 24],
+      iconAnchor: [12, 12],
+    });
+  }, []);
 
   return (
-    <div className="w-full h-[500px] rounded-lg shadow-lg overflow-hidden">
-      <MapContainer center={mapCenter} zoom={14} style={{ width: "100%", height: "100%" }}>
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        <MapUpdater center={mapCenter} />
+    <div className="w-full h-[500px] rounded-lg overflow-hidden shadow">
+      {isLoading && (
+        <div className="p-4 bg-blue-50 text-blue-700 text-center">
+          Loading bus locations...
+        </div>
+      )}
 
-        {filteredBuses.map((bus) => (
-          <Marker key={bus.id} position={bus.position} icon={busIcon}>
+      {error && (
+        <div className="p-4 bg-red-50 text-red-700 text-center">
+          Error: {error.message}
+        </div>
+      )}
+
+      {!isLoading && !error && buses.length === 0 && (
+        <div className="p-4 bg-yellow-50 text-yellow-700 text-center">
+          {searchQuery.trim()
+            ? `No buses found matching "${searchQuery}"`
+            : selectedRoute !== "All"
+            ? `No buses found on route "${selectedRoute}"`
+            : "No active buses found"}
+        </div>
+      )}
+
+      <MapContainer
+        center={finalCenter}
+        zoom={13}
+        style={{ width: "100%", height: "100%" }}
+      >
+        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+
+        <MapUpdater
+          center={finalCenter}
+          zoom={13}
+          active={shouldCenter && searchedBus}
+        />
+
+        {buses.map((b) => (
+          <Marker key={b.busId} position={[b.lat, b.lng]} icon={busIcon}>
             <Popup>
-              <strong>{bus.busName}</strong> ({bus.busNumber}) <br />
-              Route: {bus.route} <br />
-              Status: {bus.status}
+              <div className="text-sm">
+                <strong>{b.busName}</strong> ({b.busNumber})
+                <br />
+                Route: {b.route}
+                <br />
+                Status: {b.status}
+                <br />
+                {b.updatedAt && (
+                  <>
+                    Updated:{" "}
+                    {new Date(b.updatedAt).toLocaleTimeString()} <br />
+                    {new Date(b.updatedAt).toLocaleDateString()}
+                  </>
+                )}
+              </div>
             </Popup>
           </Marker>
         ))}
       </MapContainer>
     </div>
   );
-};
-
-export default LeafletMap;
+}
