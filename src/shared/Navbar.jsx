@@ -3,10 +3,12 @@ import { AuthContext } from "../Context/AuthContext";
 import { NavLink } from "react-router";
 import Logo from "./Logo/Logo";
 import './navbar.css'
+import useAdmin from "../hooks/useAdmin";
 
 
 const Navbar = () => {
     const { user, SignOutUser, role } = useContext(AuthContext);
+    const [isAdmin, adminLoading] = useAdmin();
 
     const handleSignOut = () => {
         SignOutUser().catch((err) => console.error("Logout Error:", err));
@@ -21,7 +23,7 @@ const Navbar = () => {
             <li><NavLink to="/notice">Notice</NavLink></li>
             {user && (
                 <li>
-                    <NavLink to={role === 'admin' ? '/dashboard/adminhome' : '/dashboard/userhome'}>
+                    <NavLink to={isAdmin ? '/dashboard/adminhome' : '/dashboard/userhome'}>
                         Dashboard
                     </NavLink>
                 </li>

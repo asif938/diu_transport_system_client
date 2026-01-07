@@ -14,8 +14,9 @@ import {
     FaChartBar,
     FaUsers,
     FaRoute,
-    FaClipboardList
+    FaClipboardList,
 } from 'react-icons/fa';
+import { MdNotificationAdd } from "react-icons/md";
 import logo from '../assets/logo.png';
 import Logo from '../shared/Logo/Logo';
 import useAuth from '../hooks/useAuth';
@@ -88,7 +89,7 @@ const Dashboard = () => {
         },
         {
             name: 'Add Notice',
-            icon: <FaBell />,
+            icon: <MdNotificationAdd />,
             path: '/dashboard/addnotice',
             badge: null
         },
@@ -117,13 +118,13 @@ const Dashboard = () => {
         {
             name: 'Bus Routes',
             icon: <FaRoute />,
-            path: '/dashboard/transportSchedule',
+            path: '/dashboard/schedule',
             badge: null
         },
         {
             name: 'Notices',
             icon: <FaBell />,
-            path: '/dashboard/notice',
+            path: '/dashboard/notices',
             badge: null
         },
         {

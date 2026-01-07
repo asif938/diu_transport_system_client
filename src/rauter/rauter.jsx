@@ -18,6 +18,7 @@ import AddNotice from "../Pages/Dashboard/AddNotice";
 import AdminAddSchedule from "../Pages/Dashboard/AdminAddSchedule";
 import LiveSchedule from "../Pages/LiveSchedule";
 import PrivateRoute from "../routes/PrivateRoute";
+import UserHome from "../Pages/Dashboard/Userhome/UserHome";
 
 
 const router = createBrowserRouter([
@@ -66,7 +67,7 @@ const router = createBrowserRouter([
             //normal user routes
             {
                 path: "userhome",
-                element: <h1>User HOme</h1>
+                element: <UserHome></UserHome>
             },
             {
 
@@ -75,7 +76,7 @@ const router = createBrowserRouter([
 
             },
             {
-                path: "notice",
+                path: "notices",
                 Component: Notice
             },
             {
